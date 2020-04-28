@@ -2,14 +2,18 @@
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace TestProject1
 {
     public class TestContext : DbContext
     {
+        private static readonly ILoggerFactory SomeLoggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddDebug();
+        });
         private readonly bool _convertPk;
-
         public TestContext(bool convertPk)
         {
             _convertPk = convertPk;
@@ -18,7 +22,10 @@ namespace TestProject1
         public DbSet<SomeEntity> IntegerEntities { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite("DataSource=:memory:");
+            => options.UseSqlite("DataSource=:memory:")
+                .UseLoggerFactory(SomeLoggerFactory)
+                .EnableDetailedErrors()
+                .EnableSensitiveDataLogging();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
